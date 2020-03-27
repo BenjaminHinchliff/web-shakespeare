@@ -8,6 +8,9 @@ const config = {
     stop: 'stop!',
     start: 'generate!',
   },
+  locations: {
+    model: `${window.location.host}/model/model.json`,
+  },
   temperature: 0.9, // temprature of the RNN (changes craziness - higher is more)
 };
 

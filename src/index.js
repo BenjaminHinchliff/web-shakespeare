@@ -47,7 +47,7 @@ function* generateText(model, startString) {
   }
 }
 
-const { ids, messages } = config;
+const { ids, messages, locations } = config;
 
 const pre = document.querySelector(`#${ids.outputPre}`);
 const seed = document.querySelector(`#${ids.seedInput}`);
@@ -59,7 +59,7 @@ let interval = -1;
 generate.addEventListener('click', async () => {
   if (interval === -1) {
     interval = -2;
-    const model = await tf.loadLayersModel('http://localhost:9000/model/model.json');
+    const model = await tf.loadLayersModel(locations.model);
     const startString = seed.value || ' ';
     let generated = startString;
     // just ignore the fact that I moved it lowercase because otherwise it dies
