@@ -1,4 +1,5 @@
 import * as tf from '@tensorflow/tfjs';
+import config from './config';
 
 const vocabString = '\n !$&\',-.3:;?ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
 const vocab = [...new Set(vocabString.split(''))].sort();
@@ -20,7 +21,6 @@ function sample(probs, temperature) {
   });
 }
 
-const TEMPERATURE = 1.0;
 /**
  * a generator that generates the next character each time you call it,
  * and never has a done state. So if you wanted that, sucks to be you
@@ -38,7 +38,7 @@ function* generateText(model, startString) {
     let predictions = model.predict(inputEval);
     predictions = tf.squeeze(predictions, 0);
 
-    const predId = sample(tf.squeeze(predictions), TEMPERATURE);
+    const predId = sample(tf.squeeze(predictions), config.temperature);
 
     inputEval = tf.expandDims([predId], 0);
 
@@ -46,16 +46,14 @@ function* generateText(model, startString) {
   }
 }
 
-const pre = document.createElement('pre');
-document.body.appendChild(pre);
+const pre = document.querySelector('#output');
 
-const NUM_CHARS_GENERATE = 1000;
 tf.loadLayersModel('http://localhost:9000/model/model.json').then((model) => {
   const startString = idx2char[Math.floor(Math.random() * idx2char.length)].toLowerCase();
   let generated = startString;
   const generator = generateText(model, startString);
   const interval = setInterval(() => {
-    if (generated.length < NUM_CHARS_GENERATE || generated.slice(-1) !== '\n') {
+    if (generated.length < config.textLength || generated.slice(-1) !== '\n') {
       generated += generator.next().value;
       pre.textContent = generated;
     } else {
