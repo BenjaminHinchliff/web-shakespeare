@@ -26,7 +26,8 @@ function sample(probs, temperature) {
  * and never has a done state. So if you wanted that, sucks to be you
  * (don't kill me plase)
  *
- * @param {tf.LayersModel} model the model to actually genearte the characters with
+ * @param {tf.LayersModel} model the model to actually generate the
+ *  characters with
  * @param {string} startString the string to start the model with
  */
 function* generateText(model, startString) {
@@ -46,19 +47,31 @@ function* generateText(model, startString) {
   }
 }
 
-const pre = document.querySelector('#output');
+const { ids, messages } = config;
 
-tf.loadLayersModel('http://localhost:9000/model/model.json').then((model) => {
-  const startString = idx2char[Math.floor(Math.random() * idx2char.length)].toLowerCase();
-  let generated = startString;
-  const generator = generateText(model, startString);
-  const interval = setInterval(() => {
-    if (generated.length < config.textLength || generated.slice(-1) !== '\n') {
+const pre = document.querySelector(`#${ids.outputPre}`);
+const seed = document.querySelector(`#${ids.seedInput}`);
+const generate = document.querySelector(`#${ids.generateButton}`);
+generate.value = messages.start;
+
+// true if text is currently generating, false otherwise
+let interval = -1;
+generate.addEventListener('click', async () => {
+  if (interval === -1) {
+    interval = -2;
+    const model = await tf.loadLayersModel('http://localhost:9000/model/model.json');
+    const startString = seed.value || ' ';
+    let generated = startString;
+    // just ignore the fact that I moved it lowercase because otherwise it dies
+    const generator = generateText(model, startString.toLowerCase());
+    interval = setInterval(() => {
       generated += generator.next().value;
       pre.textContent = generated;
-    } else {
-      clearInterval(interval);
-    }
-  },
-  0);
+    }, 0);
+    generate.value = messages.stop;
+  } else if (interval !== -2) {
+    clearInterval(interval);
+    interval = -1;
+    generate.value = messages.start;
+  }
 });
